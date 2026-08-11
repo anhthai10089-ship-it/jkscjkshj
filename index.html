@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Thanh Toán QR MBBank</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-accent: #60a5fa;
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #020617, #311042);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            background: #ffffff;
+            border-radius: 50%;
+            opacity: 0.8;
+            pointer-events: none;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10px) translateX(0); }
+            100% { transform: translateY(105vh) translateX(20px); }
+        }
+
+        .welcome-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .welcome-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .welcome-card-content {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 28px;
+            padding: 40px 24px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: scaleUpWelcome 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 101;
+        }
+
+        @keyframes scaleUpWelcome {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .welcome-avatar-wrapper {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 20px;
+        }
+
+        .welcome-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #60a5fa;
+            box-shadow: 0 0 25px rgba(96, 165, 250, 0.4);
+        }
+
+        .welcome-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 12px;
+            line-height: 1.4;
+            letter-spacing: -0.5px;
+        }
+
+        .welcome-subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        .btn-enter {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 16px 24px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-enter:active { transform: scale(0.97); }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            width: 100%;
+            max-width: 440px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 10;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: white;
+            padding: 20px 20px 16px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .views-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-top: 8px;
+        }
+
+        .views-badge i {
+            color: #60a5fa;
+            animation: pulseEye 2s infinite;
+        }
+
+        @keyframes pulseEye {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 0.6; }
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .header p { font-size: 11px; opacity: 0.85; }
+
+        .app-body { padding: 20px; }
+
+        .user-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #2563eb;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+        }
+
+        .bank-badge-icon {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: #2563eb;
+            color: white;
+            font-size: 9px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+        }
+
+        .user-info { flex: 1; overflow: hidden; }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .bank-details {
+            font-size: 12px;
+            color: #2563eb;
+            font-weight: 600;
+            margin-top: 1px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .acc-number-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 1px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 700;
+        }
+
+        .form-group { margin-bottom: 14px; }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i.fa-pen,
+        .input-wrapper i.fa-money-bill-wave {
+            position: absolute;
+            left: 14px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            background: #fff;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-control.error {
+            border-color: var(--danger);
+            background-color: var(--danger-bg);
+        }
+
+        .error-message {
+            font-size: 11px;
+            color: var(--danger);
+            font-weight: 600;
+            margin-top: 4px;
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .quick-amounts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .btn-quick {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 4px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-quick:active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 13px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+            transition: all 0.2s ease;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:active { opacity: 0.9; }
+        .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
+        .big-error-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            z-index: 20;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .big-error-icon-box {
+            width: 90px;
+            height: 90px;
+            background: var(--danger-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--danger);
+            font-size: 50px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.25);
+            animation: bounceIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .big-error-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--danger);
+            margin-bottom: 6px;
+        }
+
+        .big-error-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .btn-dismiss-error {
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .qr-section {
+            opacity: 0;
+            visibility: hidden;
+            max-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0;
+            padding-top: 0;
+            border-top: 0 dashed #e2e8f0;
+            transition: opacity 0.3s ease, max-height 0.3s ease, margin-top 0.3s ease, padding-top 0.3s ease;
+        }
+
+        .qr-section.show {
+            opacity: 1;
+            visibility: visible;
+            max-height: 800px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1.5px dashed #e2e8f0;
+        }
+
+        .qr-card {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            padding: 18px;
+            border-radius: 18px;
+            box-shadow: 0 15px 35px rgba(37, 99, 235, 0.12), 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid rgba(37, 99, 235, 0.15);
+            text-align: center;
+            width: 100%;
+            max-width: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .countdown-box {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: 1px solid #fecaca;
+            color: var(--danger);
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 30px;
+            margin-bottom: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .qr-image-wrapper {
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #e0f2fe;
+            margin-bottom: 12px;
+        }
+
+        .scan-beam {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #2563eb, #60a5fa, #2563eb, transparent);
+            animation: scanning 2s ease-in-out infinite alternate;
+            z-index: 4;
+            opacity: 0.8;
+        }
+
+        @keyframes scanning {
+            0% { top: 5%; opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { top: 92%; opacity: 0.3; }
+        }
+
+        .qr-image {
+            width: 86%;
+            height: 86%;
+            object-fit: contain;
+            z-index: 2;
+        }
+
+        .spinner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+            z-index: 5;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .amount-display {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2px;
+        }
+
+        .info-display {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .info-display i { color: #2563eb; }
+    </style>
+</head>
+<body>
+
+<audio id="bgMusic" loop>
+    <source src="https://stream.zeno.fm/f3wvbbqmdg8uv" type="audio/mp3">
+</audio>
+
+<div class="welcome-overlay" id="welcomeOverlay">
+    <div class="welcome-card-content">
+        <div class="welcome-avatar-wrapper">
+            <img src="avatar.jpg" alt="Avatar" class="welcome-avatar">
+        </div>
+        <div class="welcome-title">Nơi chuyển khoản cho Nguyễn Anh Thái</div>
+        <div class="welcome-subtitle">Chạm vào nút bên dưới để bắt đầu giao dịch chuyển khoản nhanh 24/7</div>
+        <button class="btn-enter" onclick="enterApp()">
+            <i class="fa-solid fa-qrcode"></i> Vào Quét Mã QR Ngay
+        </button>
+    </div>
+</div>
+
+<div class="container" id="mainContainer">
+    <div class="header">
+        <h1><i class="fa-solid fa-qrcode"></i> Nguyễn Anh Thái</h1>
+        <p>Tạo mã QR VietQR chuyển khoản nhanh 24/7</p>
+        
+        <div class="views-badge">
+            <i class="fa-solid fa-eye"></i> <span id="viewCount">0</span> đã truy cập
+        </div>
+    </div>
+
+    <div class="app-body">
+        <div class="user-card">
+            <div class="avatar-container">
+                <img src="avatar.jpg" alt="Avatar" class="avatar-img">
+                <div class="bank-badge-icon">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="user-name">NGUYEN ANH THAI</div>
+                <div class="bank-details">
+                    <i class="fa-solid fa-shield-halved"></i> MBBank (Quân Đội)
+                </div>
+                <div class="acc-number-text">STK: 0968816707</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="amount">Số tiền thanh toán (VNĐ)</label>
+            <div class="input-wrapper">
+                <i class="fa-solid fa-money-bill-wave"></i>
+                <!-- Đã thêm inputmode="numeric" và pattern="[0-9]*" để hiện bàn phím số -->
+                <input type="text" id="amount" class="form-control" inputmode="numeric" pattern="[0-9]*" value="" placeholder="Nhập số tiền (Tối thiểu 5.000 VNĐ)">
+            </div>
+            <div class="error-message" id="errorMessage">
+                <i class="fa-solid fa-triangle-exclamation"></i> Số tiền nạp tối thiểu phải từ 5.000 VNĐ!
+            </div>
+            <div class="quick-amounts">
+                <button class="btn-quick" onclick="addAmount(10000)">+10K</button>
+                <button class="btn-quick" onclick="addAmount(50000)">+50K</button>
+                <button class="btn-quick" onclick="addAmount(100000)">+100K</button>
+                <button class="btn-quick" onclick="addAmount(500000)">+500K</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="addInfo">Nội dung chuyển khoản</label>
+            <div class="input-wrapper">
+                <i class="fa-solid fa-pen"></i>
+                <input type="text" id="addInfo" class="form-control" value="" placeholder="Nhập nội dung chuyển tiền">
+            </div>
+        </div>
+
+        <button class="btn-submit" id="submitBtn" onclick="generateQR()">
+            <i class="fa-solid fa-bolt"></i> Tạo Mã QR Thanh Toán
+        </button>
+
+        <div class="qr-section" id="qrSection">
+            <div class="qr-card">
+                <div class="countdown-box">
+                    <i class="fa-regular fa-clock"></i> Mã tự đóng sau: <span id="timer">60</span>s
+                </div>
+                
+                <div class="qr-image-wrapper">
+                    <div class="scan-beam"></div>
+                    <div class="spinner" id="spinner"></div>
+                    <img id="qrImage" class="qr-image" src="" alt="Mã QR Thanh Toán">
+                </div>
+                
+                <div class="amount-display" id="displayAmount">0 VNĐ</div>
+                <div class="info-display">
+                    <i class="fa-solid fa-mobile-screen-button"></i> Quét bằng ứng dụng ngân hàng bất kỳ
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="big-error-overlay" id="bigErrorOverlay">
+        <div class="big-error-icon-box">
+            <i class="fa-solid fa-xmark"></i>
+        </div>
+        <div class="big-error-title" id="bigErrorTitle">Giao dịch không hợp lệ!</div>
+        <div class="big-error-subtitle" id="bigErrorSubtitle">Số tiền nạp tối thiểu phải từ <strong>5.000 VNĐ</strong> trở lên.<br>Vui lòng nhập lại số tiền hợp lệ để tiếp tục.</div>
+        <button class="btn-dismiss-error" onclick="closeBigError()">
+            Đã hiểu, nhập lại
+        </button>
+    </div>
+</div>
+
+<script>
+    function createSnowflake() {
+        const snowflake = document.createElement('div');
+        snowflake.classList.add('snowflake');
+        const size = Math.random() * 5 + 3 + 'px';
+        snowflake.style.width = size;
+        snowflake.style.height = size;
+        snowflake.style.left = Math.random() * window.innerWidth + 'px';
+        const duration = Math.random() * 3 + 2 + 's';
+        snowflake.style.animationDuration = duration;
+        snowflake.style.opacity = Math.random() * 0.7 + 0.3;
+        document.body.appendChild(snowflake);
+        setTimeout(() => {
+            snowflake.remove();
+        }, parseFloat(duration) * 1000);
+    }
+    setInterval(createSnowflake, 100);
+
+    const BANK_CODE = 'MB';
+    const ACCOUNT_NO = '0968816707';
+    const ACCOUNT_NAME = 'NGUYEN ANH THAI';
+
+    const audio = document.getElementById('bgMusic');
+    const welcomeOverlay = document.getElementById('welcomeOverlay');
+
+    function enterApp() {
+        audio.volume = 0.5;
+        audio.play().catch(error => {
+            console.log("Audio play blocked:", error);
+        });
+        welcomeOverlay.classList.add('hidden');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const STORAGE_KEY = 'page_views_v2';
+        let currentViews = localStorage.getItem(STORAGE_KEY);
+        if (!currentViews) {
+            currentViews = 0;
+        } else {
+            currentViews = parseInt(currentViews, 10) + 1;
+        }
+        localStorage.setItem(STORAGE_KEY, currentViews);
+        document.getElementById('viewCount').textContent = currentViews.toLocaleString('en-US');
+    });
+
+    const amountInput = document.getElementById('amount');
+    const addInfoInput = document.getElementById('addInfo');
+    const qrSection = document.getElementById('qrSection');
+    const qrImage = document.getElementById('qrImage');
+    const spinner = document.getElementById('spinner');
+    const displayAmount = document.getElementById('displayAmount');
+    const timerElement = document.getElementById('timer');
+    const errorMessage = document.getElementById('errorMessage');
+    const submitBtn = document.getElementById('submitBtn');
+    const bigErrorOverlay = document.getElementById('bigErrorOverlay');
+    const bigErrorTitle = document.getElementById('bigErrorTitle');
+    const bigErrorSubtitle = document.getElementById('bigErrorSubtitle');
+
+    let countdownInterval = null;
+    let timeLeft = 60;
+
+    function formatNumber(val) {
+        let num = val.replace(/[^0-9]/g, '');
+        if (!num) return '';
+        return parseInt(num, 10).toLocaleString('en-US');
+    }
+
+    function getRawAmount() {
+        return amountInput.value.replace(/[^0-9]/g, '') || '0';
+    }
+
+    function validateAmount() {
+        const raw = parseInt(getRawAmount(), 10) || 0;
+        if (raw > 0 && raw < 5000) {
+            amountInput.classList.add('error');
+            errorMessage.style.display = 'flex';
+            submitBtn.disabled = true;
+            return false;
+        } else {
+            amountInput.classList.remove('error');
+            errorMessage.style.display = 'none';
+            submitBtn.disabled = false;
+            return true;
+        }
+    }
+
+    function startCountdown() {
+        clearInterval(countdownInterval);
+        timeLeft = 60;
+        timerElement.textContent = timeLeft;
+        countdownInterval = setInterval(() => {
+            timeLeft--;
+            timerElement.textContent = timeLeft;
+            if (timeLeft <= 0) { closeQR(); }
+        }, 1000);
+    }
+
+    function closeQR() {
+        clearInterval(countdownInterval);
+        qrSection.classList.remove('show');
+    }
+
+    function generateQR() {
+        const rawAmount = parseInt(getRawAmount(), 10) || 0;
+        
+        if (rawAmount === 0) {
+            bigErrorTitle.textContent = 'Chưa nhập số tiền!';
+            bigErrorSubtitle.innerHTML = 'Vui lòng nhập số tiền cần thanh toán trước khi tạo mã QR.';
+            bigErrorOverlay.style.display = 'flex';
+            return;
+        }
+
+        if (rawAmount < 5000) {
+            bigErrorTitle.textContent = 'Giao dịch không hợp lệ!';
+            bigErrorSubtitle.innerHTML = 'Số tiền nạp tối thiểu phải từ <strong>5.000 VNĐ</strong> trở lên.<br>Vui lòng nhập lại số tiền hợp lệ để tiếp tục.';
+            bigErrorOverlay.style.display = 'flex';
+            return;
+        }
+
+        const addInfo = encodeURIComponent(addInfoInput.value.trim());
+        const encodedName = encodeURIComponent(ACCOUNT_NAME);
+        displayAmount.textContent = rawAmount.toLocaleString('vi-VN') + ' VNĐ';
+        
+        qrSection.classList.add('show');
+        spinner.style.display = 'block';
+        qrImage.src = `https://img.vietqr.io/image/${BANK_CODE}-${ACCOUNT_NO}-compact2.png?amount=${rawAmount}&addInfo=${addInfo}&accountName=${encodedName}`;
+        startCountdown();
+    }
+
+    function closeBigError() {
+        bigErrorOverlay.style.display = 'none';
+        amountInput.focus();
+    }
+
+    qrImage.onload = function() { spinner.style.display = 'none'; };
+    
+    amountInput.addEventListener('input', function() { 
+        this.value = formatNumber(this.value); 
+        validateAmount();
+        closeQR(); 
+    });
+
+    function addAmount(val) {
+        let current = parseInt(getRawAmount(), 10) || 0;
+        amountInput.value = (current + val).toLocaleString('en-US');
+        validateAmount();
+        closeQR();
+    }
+</script>
+
+</body>
+</html>
